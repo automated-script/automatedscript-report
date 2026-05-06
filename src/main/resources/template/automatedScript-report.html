@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Automated Script | Automation Execution Report</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      /* original dark dashboard palette */
+      --bg:#0b1220;
+      --stroke:rgba(255,255,255,.08);
+      --text:#eaf1ff;
+      --muted:#9fb0ca;
+      --blue:#60a5fa;
+      --purple:#a78bfa;
+      --green:#22c55e;
+      --red:#ef4444;
+      --amber:#f59e0b;
+
+      --radius:18px;
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(45,212,191,.12), transparent 52%),
+        radial-gradient(900px 500px at 85% 0%, rgba(96,165,250,.10), transparent 50%),
+        linear-gradient(180deg, var(--bg), #070b14 70%);
+    }
+	#kpiTotalTestsCard {
+	  cursor: pointer;
+	}
+
+	#kpiTotalTestsCard:hover {
+	  transform: translateY(-2px);
+	  transition: 0.2s ease;
+	}
+
+	.pulse-highlight {
+	  outline: 2px solid rgba(0, 255, 153, 0.9);
+	  box-shadow: 0 0 0 6px rgba(0, 255, 153, 0.15);
+	  border-radius: 16px;
+	}
+	/* Make Total Tests KPI clickable */
+	#kpiTotalTestsCard {
+	  cursor: pointer;
+	  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+	  border: 1px solid rgba(255, 255, 255, 0.06); /* default subtle border */
+	}
+	/* ✅ Common hover effect for ALL KPI cards */
+	.kpi {
+	  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+	  border: 1px solid rgba(255, 255, 255, 0.06); /* default subtle border */
+	}
+	
+	/* ================= STICKY KPI HEADER ================= */
+	#kpiHeader {
+	  position: sticky;
+	  top: 0;
+	  z-index: 35; /* below topbar(40) fix below */
+	  backdrop-filter: blur(14px);
+	  background: linear-gradient(
+	    180deg,
+	    rgba(11,18,32,.96),
+	    rgba(11,18,32,.88)
+	  );
+	  border-bottom: 1px solid rgba(255,255,255,.06);
+	  padding-bottom: 8px;
+	  transition: box-shadow .2s ease, background .2s ease;
+	}
+
+	/* Premium shadow when scrolling */
+	#kpiHeader.stuck {
+	  box-shadow: 0 8px 26px rgba(0,0,0,.45);
+	}
+
+	/* hover highlight */
+	.kpi:hover {
+	  transform: translateY(-2px);
+	  border: 1px solid rgba(0, 255, 153, 0.9);
+	  box-shadow: 0 0 0 4px rgba(0, 255, 153, 0.15);
+	}
+
+	/* ✅ Only Total Tests should look clickable */
+	#kpiTotalTestsCard {
+	  cursor: pointer;
+	}
+
+	/* Other KPIs should NOT look clickable */
+	.kpi:not(#kpiTotalTestsCard) {
+	  cursor: default;
+	}
+
+	/* ✅ Keyboard focus effect only for Total Tests (because only it is interactive) */
+	#kpiTotalTestsCard:focus-visible {
+	  outline: none;
+	  border: 1px solid rgba(0, 255, 153, 0.95);
+	  box-shadow: 0 0 0 5px rgba(0, 255, 153, 0.20);
+	}
+
+	/* Hover highlight green border */
+	#kpiTotalTestsCard:hover {
+	  transform: translateY(-2px);
+	  border: 1px solid rgba(0, 255, 153, 0.9);
+	  box-shadow: 0 0 0 4px rgba(0, 255, 153, 0.15);
+	}
+
+	/* Keyboard focus highlight (accessibility) */
+	#kpiTotalTestsCard:focus-visible {
+	  outline: none;
+	  border: 1px solid rgba(0, 255, 153, 0.95);
+	  box-shadow: 0 0 0 5px rgba(0, 255, 153, 0.20);
+	}
+	/* ✅ IMPORTANT: allow tooltip to display outside KPI row */
+	.kpiStrip {
+	  overflow: visible !important;
+	}
+
+	/* ✅ ensure KPI doesn't clip internal tooltip */
+	.kpi {
+	  overflow: visible !important;
+	}
+
+	/* Tooltip base */
+	#kpiTotalTestsCard {
+	  position: relative;
+	}
+
+	/* Tooltip hidden by default (NOW BELOW KPI) */
+	#kpiTotalTestsCard .kpiTooltip {
+	  position: absolute;
+
+	  /* ⬇️ Move tooltip below the KPI */
+	  top: auto;
+	  bottom: -12px;
+	  right: 12px;
+
+	  /* start position hidden slightly */
+	  transform: translateY(100%);
+
+	  background: rgba(10, 14, 20, 0.96);
+	  border: 1px solid rgba(0, 255, 153, 0.55);
+	  color: rgba(235, 255, 245, 0.95);
+
+	  padding: 6px 10px;
+	  border-radius: 10px;
+
+	  font-size: 12px;
+	  white-space: nowrap;
+
+	  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+	  opacity: 0;
+	  visibility: hidden;
+	  pointer-events: none;
+
+	  transition: 0.18s ease;
+
+	  /* make sure it stays above things */
+	  z-index: 999999;
+	}
+
+	/* Tooltip arrow (NOW POINTING UP) */
+	#kpiTotalTestsCard .kpiTooltip::after {
+	  content: "";
+	  position: absolute;
+
+	  /* ⬆️ Arrow goes on TOP now */
+	  top: -6px;
+	  right: 16px;
+
+	  width: 10px;
+	  height: 10px;
+	  background: rgba(10, 14, 20, 0.96);
+
+	  /* borders should match direction */
+	  border-left: 1px solid rgba(0, 255, 153, 0.35);
+	  border-top: 1px solid rgba(0, 255, 153, 0.35);
+
+	  /* rotated to look like a caret */
+	  transform: rotate(45deg);
+	}
+	/* ============ Screenshot Modal ============ */
+	.imgModal {
+	  display: none;
+	  position: fixed;
+	  z-index: 9999;
+	  inset: 0;
+	  background: rgba(0,0,0,.85);
+	  backdrop-filter: blur(6px);
+	  justify-content: center;
+	  align-items: center;
+	}
+
+	.imgModal img {
+	  max-width: 92%;
+	  max-height: 88%;
+	  border-radius: 12px;
+	  box-shadow: 0 0 40px rgba(0,0,0,.6);
+	}
+
+	.imgClose {
+	  position: absolute;
+	  top: 24px;
+	  right: 36px;
+	  font-size: 34px;
+	  color: #fff;
+	  cursor: pointer;
+	}
+
+	/* Show tooltip on hover/focus */
+	#kpiTotalTestsCard:hover .kpiTooltip,
+	#kpiTotalTestsCard:focus-visible .kpiTooltip {
+	  opacity: 1;
+	  visibility: visible;
+
+	  /* final visible position slightly away */
+	  transform: translateY(115%);
+	}
+
+	/* Execution Date/Time badge - Extent style */
+	.execMeta {
+	  display: inline-flex;
+	  align-items: center;
+	  gap: 10px;
+
+	  padding: 8px 12px;
+	  border-radius: 14px;
+
+	  background: linear-gradient(
+	    135deg,
+	    rgba(0, 255, 153, 0.10),
+	    rgba(255, 255, 255, 0.04)
+	  );
+
+	  border: 1px solid rgba(0, 255, 153, 0.25);
+	  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+
+	  color: rgba(235, 255, 245, 0.95);
+	  font-size: 13px;
+	  white-space: nowrap;
+	}
+
+	.execIcon {
+	  width: 28px;
+	  height: 28px;
+	  border-radius: 10px;
+
+	  display: inline-flex;
+	  align-items: center;
+	  justify-content: center;
+
+	  background: rgba(0, 255, 153, 0.12);
+	  border: 1px solid rgba(0, 255, 153, 0.22);
+	  color: rgba(0, 255, 153, 0.95);
+	}
+
+	.execLabel {
+	  color: rgba(180, 200, 190, 0.9);
+	  margin-right: 6px;
+	}
+
+	.execValue {
+	  font-weight: 600;
+	  letter-spacing: 0.2px;
+	}
+
+	/* Small extra line inside KPI for meta values */
+	.kpiSub {
+	  margin-top: 6px;
+	  font-size: 12px;
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: center;
+	  opacity: 0.92;
+	}
+
+	.kpiSubLabel {
+	  color: rgba(180, 200, 190, 0.85);
+	}
+
+	.kpiSubValue {
+	  font-weight: 700;
+	  color: rgba(235, 255, 245, 0.95);
+	  letter-spacing: 0.2px;
+	}
+
+    /* top bar */
+    .topbar{
+      position:sticky; 
+	  top:0; 
+	  z-index:40;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(11,18,32,.92), rgba(11,18,32,.55));
+      border-bottom:1px solid var(--stroke);
+    }
+    .topbar .inner{
+      max-width:1320px; margin:0 auto; padding:14px 18px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+    }
+    .brand{display:flex; align-items:center; gap:12px; min-width: 280px;}
+    .logo{
+      width:44px; height:44px; border-radius:14px; display:grid; place-items:center;
+      background: linear-gradient(135deg, rgba(45,212,191,.85), rgba(96,165,250,.75));
+      box-shadow: 0 18px 60px rgba(45,212,191,.18);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .brand h1{margin:0; font-size:14px; font-weight:950; letter-spacing:.2px;}
+    .brand p{margin:4px 0 0; font-size:12px; font-weight:700; color:var(--muted);}
+    .actions{display:flex; align-items:center; gap:10px;}
+    .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:850;
+      font-size:12px;
+      cursor:pointer;
+      transition:.15s ease;
+      display:inline-flex; gap:10px; align-items:center;
+    }
+    .btn:hover{transform: translateY(-1px); border-color:rgba(255,255,255,.16);}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(45,212,191,.16), rgba(96,165,250,.14));
+      border-color: rgba(255,255,255,.14);
+    }
+
+    .container{max-width:1320px; margin:0 auto; padding:18px;}
+    .grid{display:grid; gap:14px;}
+
+    /* KPI strip */
+    .kpiStrip{display:grid; grid-template-columns: repeat(6, 1fr); gap:12px;}
+    @media (max-width:1200px){ .kpiStrip{grid-template-columns: repeat(3, 1fr);} }
+    @media (max-width:700px){ .kpiStrip{grid-template-columns: repeat(2, 1fr);} }
+    .kpi{
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      padding:14px 14px 12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .kpi:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(700px 200px at 10% -30%, rgba(167,139,250,.14), transparent 45%),
+        radial-gradient(500px 200px at 90% 0%, rgba(96,165,250,.12), transparent 45%);
+      opacity:.8;
+      pointer-events:none;
+    }
+    .kpi > *{position:relative;}
+    .kpiTop{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+    .kpiName{font-size:12px; font-weight:950; color:rgba(234,241,255,.82); letter-spacing:.2px;}
+    .kpiValue{font-size:22px; font-weight:1000; margin-top:10px;}
+    .kpiTrend{
+      margin-top:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      color:var(--muted); font-size:12px; font-weight:850;
+    }
+    .delta{
+      padding:4px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: rgba(234,241,255,.9);
+      display:inline-flex; gap:8px; align-items:center;
+    }
+    .delta.up i{color:var(--green);}
+    .delta.down i{color:var(--red);}
+    .menu{
+      width:36px; height:36px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      display:grid; place-items:center; cursor:pointer;
+    }
+	/* Suite metadata inside Automation Execution Summary card */
+	.suiteMetaPanel {
+	  margin-top: 18px;
+	  display: grid;
+	  grid-template-columns: repeat(2, 1fr);
+	  gap: 10px 20px;
+	  padding: 14px 16px;
+	  border-radius: 14px;
+	  background: rgba(255,255,255,0.04);
+	  border: 1px solid rgba(255,255,255,0.08);
+	}
+
+	.suiteMetaItem {
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: center;
+	  font-size: 12.5px;
+	  font-weight: 800;
+	}
+
+	.suiteMetaLabel {
+	  color: rgba(200,215,235,0.75);
+	  letter-spacing: .2px;
+	}
+
+	.suiteMetaValue {
+	  color: #eaf1ff;
+	  font-weight: 900;
+	}
+	/*automation execution summary donut */
+	/* Keep donut perfectly circular */
+	#donutStatus {
+	  width: 100% !important;
+	  max-width: 260px;
+	  aspect-ratio: 1 / 1;
+	  margin: 0 auto;
+	  display: block;
+	  /* ✨ Premium depth effect */
+	  filter: drop-shadow(0 0 18px rgba(255,255,255,0.05));
+	}
+	canvas#donutStatus:hover {
+	  filter: drop-shadow(0 0 22px rgba(255,255,255,0.08));
+	}
+
+	/* Premium donut legend */
+	.statusLegendPremium {
+	  margin-top: 18px;
+	  display: flex;
+	  justify-content: center;
+	  gap: 34px;
+	  flex-wrap: nowrap;
+	  font-weight: 800;
+	  font-size: 14px;
+	  color: #dce7ff;
+	}
+
+	.legendItem {
+	  display: flex;
+	  align-items: center;
+	  gap: 8px;
+	  letter-spacing: .3px;
+	}
+
+	.dot {
+	  width: 14px;
+	  height: 14px;
+	  border-radius: 50%;
+	  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+	}
+
+	.dot.passed  { background:#22c55e; }
+	.dot.failed  { background:#ef4444; }
+	.dot.skipped { background:#60a5fa; }
+	.dot.warning { background:#f59e0b; }
+
+    /* Cards */
+    .card{
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:14px 14px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .title{display:flex; align-items:center; gap:10px; font-size:13px; font-weight:1000; letter-spacing:.2px;}
+    .sub{font-size:12px; color:var(--muted); font-weight:800; margin-top:4px;}
+    .cardBody{padding:14px;}
+    canvas{width:100%!important; height:210px!important;}
+
+    /* Donut summary grid (replaces Execution Trend + Failures by Module cards) */
+    .midRow{
+      display:grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media(max-width:1200px){.midRow{grid-template-columns:1fr;}}
+    .donutGrid{display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;
+    }
+    @media(max-width:1200px){.donutGrid{grid-template-columns: repeat(2, 1fr);} }
+    @media(max-width:700px){.donutGrid{grid-template-columns: 1fr;} }
+    .donutCard{
+      border-radius: var(--radius);
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      padding:18px 18px 14px;
+      min-height:140px;
+      display:flex; flex-direction:column; gap:16px;
+    }
+    .donutHead{font-size:13px; font-weight:650;}
+    .donutHead .small{font-weight:650; color: rgba(234,241,255,.78);}
+    .donutWrap{position:relative; display:grid; place-items:center; height:84px;}
+    .donutWrap canvas{height:84px!important; max-width:126px;}
+    .donutCenter{position:absolute; font-size:13px; font-weight:600;}
+
+    /* Detailed Test Result */
+	.testList {
+	  display: block;
+	  overflow-y: auto;
+	  height: 100%;
+	  padding-right: 6px;
+	}
+
+    .testCase{border-radius:18px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.12); overflow:hidden;}
+    .tcHead{display:flex; justify-content:space-between; gap:12px; padding:14px 14px; cursor:pointer;}
+    .tcHead .left{display:flex; gap:12px; align-items:flex-start;}
+    .statusPill{padding:6px 12px; border-radius:999px; font-size:12px; font-weight:1000; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03);}
+    .statusPill.pass{color:var(--green); border-color:rgba(34,197,94,.25); background:rgba(34,197,94,.10);}
+    .statusPill.fail{color:var(--red); border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.10);}
+    .statusPill.skip{color:var(--blue); border-color:rgba(96,165,250,.25); background:rgba(96,165,250,.10);}
+    .statusPill.warn{color:var(--amber); border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.10);}
+    .tcTitle .name{font-weight:1000; letter-spacing:.2px;}
+    .meta{margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;}
+    .metaChip{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size:11px; font-weight:1000;
+    }
+    .metaChip.bug{color:#ffd1d1; border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.10);}
+    .expandBtn{
+      width:42px; height:42px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      color:var(--text); cursor:pointer; display:grid; place-items:center;
+    }
+    .expandBtn i{transition:.2s ease;}
+    .tcBody{display:none; border-top:1px solid rgba(255,255,255,.08); padding:12px 12px 6px;}
+    .testCase.open .tcBody{display:block;}
+    .testCase.open .expandBtn i{transform: rotate(180deg);}
+    table{width:100%; border-collapse:collapse;}
+    th, td{padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.06); font-size:12.5px;}
+    th{color:var(--muted); font-weight:1000; text-align:left; letter-spacing:.2px;}
+    .stepName{font-weight:950;}
+    .failHint{margin-top:6px; color:#ffd1d1; font-weight:900;}
+    .sIcon{
+      width:28px; height:28px; border-radius:10px; display:inline-grid; place-items:center;
+      border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03);
+    }
+    .sIcon.pass{color:var(--green); border-color:rgba(34,197,94,.25); background:rgba(34,197,94,.10);}
+    .sIcon.fail{color:var(--red); border-color:rgba(239,68,68,.25); background:rgba(239,68,68,.10);}
+    .sIcon.skip{color:var(--blue); border-color:rgba(96,165,250,.25); background:rgba(96,165,250,.10);}
+    .sIcon.warn{color:var(--amber); border-color:rgba(245,158,11,.25); background:rgba(245,158,11,.10);}
+  /* ============ Detail Test Result Menu (Extent-like) ============ */
+.dt-search{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);min-width:260px;}
+.dt-search i{color:rgba(255,255,255,.6);}
+.dt-search input{width:100%;border:none;outline:none;background:transparent;color:var(--text);font-weight:800;font-size:12px;}
+.dt-clear{border:none;cursor:pointer;background:rgba(255,255,255,.08);color:#fff;border-radius:10px;padding:6px 8px;}
+.dt-clear:hover{background:rgba(255,255,255,.12);}
+.dt-filters{display:flex;align-items:center;gap:8px;}
+.dt-chip{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);padding:7px 10px;border-radius:999px;font-weight:1000;font-size:12px;cursor:pointer;transition:.15s ease;white-space:nowrap;}
+.dt-chip:hover{transform:translateY(-1px);}
+.dt-chip.active{background:rgba(124,92,255,.18);border-color:rgba(124,92,255,.45);color:#efeaff;}
+.dt-sort{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);}
+.dt-sort i{color:rgba(255,255,255,.6);}
+.dt-sort select{background:rgba(8,12,22,.85);border:1px solid rgba(255,255,255,.10);outline:none;color:var(--text);font-weight:900;font-size:12px;cursor:pointer;border-radius:12px;padding:6px 10px;}
+    .dt-sort select option{background:#0b0f1a;color:#e8eeff;}
+    .dt-sort select:focus{box-shadow:0 0 0 3px rgba(124,92,255,.25);}
+.dt-actions{display:flex;gap:8px;align-items:center;}
+.dt-btn{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.06);color:rgba(255,255,255,.90);padding:8px 10px;border-radius:14px;font-weight:1000;font-size:12px;cursor:pointer;transition:.15s ease;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;}
+.dt-btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.10);}
+.dt-btn-accent{background:rgba(124,92,255,.18);border-color:rgba(124,92,255,.45);}
+@media(max-width:1200px){.dt-filters{flex-wrap:wrap;}.dt-actions{flex-wrap:wrap;}.dt-search{min-width:220px;}}
+html, body {
+  height: 100%;
+  overflow: hidden; /* prevent full page scroll */
+}
+
+.container {
+  height: calc(100vh - 72px); /* subtract topbar height */
+  display: flex;
+  flex-direction: column;
+}
+  
+</style>
+
+<style>
+/* ui updates allchanges */
+.historyBtn{background: rgba(124,92,255,.18)!important;border:1px solid rgba(124,92,255,.45)!important;color:#e8eeff!important;padding:7px 10px!important;border-radius:999px!important;display:inline-flex;align-items:center;gap:8px;font-weight:800;cursor:pointer;}
+.historyBtn span{font-size:12px;}
+.statusDonutWrap{position:relative;display:flex;align-items:center;justify-content:center;}
+#statusSplitCenter{position:absolute;inset:0;margin:auto;width:94px;height:94px;border-radius:999px;display:flex;align-items:center;justify-content:center;pointer-events:none;font-weight:900;font-size:20px;color:#e8eeff;}
+.tcMeta{margin-left:10px;font-size:12px;color:rgba(255,255,255,.75);display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);}
+</style>
+
+</head>
+<link rel="icon" type="image/png" href="./favicon.png">
+<body>
+	<div class="topbar">
+	  <div class="inner">
+	    <div class="brand">
+	      <div class="logo"><i class="fa-solid fa-wave-square"></i></div>
+	      <div>
+	        <h1>AutomatedScript – Automation Insights Report</h1>
+	        <p>From Execution to Excellence. Reliable Results. Repeatable Quality.</p>
+	      </div>
+	    </div>
+
+	    <div class="actions">
+	      <!-- ✅ Execution Date & Time Chip -->
+	      <div class="execMeta" id="execMeta">
+	        <span class="execIcon"><i class="fa-regular fa-clock"></i></span>
+	        <span class="execText">
+	          <span class="execLabel">Execution:</span>
+	          <span class="execValue" id="executionDateTime">--</span>
+	        </span>
+	      </div>
+
+	      <button class="btn primary"><i class="fa-solid fa-file-export"></i> Export</button>
+	      <button class="btn"><i class="fa-solid fa-print"></i> Print</button>
+	    </div>
+	  </div>
+	</div>
+
+
+  <div class="container">
+    <div class="grid">
+      <!-- KPI STRIP -->
+	  <section id="kpiHeader" class="kpiStrip">
+        <div class="kpi" id="kpiTotalTestsCard" role="button" tabindex="0"><div class="kpiTooltip">💡 Click to view details </div><div class="kpiTop"><div class="kpiName">TOTAL TESTS</div><div class="menu"><i class="fa-solid fa-ellipsis"></i></div></div><div class="kpiValue"><span id="kpiTotalTests">128</span></div><div class="kpiTrend"><span class="delta up"><i class="fa-solid fa-arrow-trend-up"></i> +5.2%</span><span>vs last run</span></div></div>
+        <div class="kpi"><div class="kpiTop"><div class="kpiName">PASSED</div><div class="menu"><i class="fa-solid fa-ellipsis"></i></div></div><div class="kpiValue"><span id="kpiPassed">112</span></div><div class="kpiTrend"><span class="delta up"><i class="fa-solid fa-arrow-trend-up"></i> +2.5%</span><span>green trend</span></div></div>
+        <div class="kpi"><div class="kpiTop"><div class="kpiName">FAILED</div><div class="menu"><i class="fa-solid fa-ellipsis"></i></div></div><div class="kpiValue"><span id="kpiFailed">10</span></div><div class="kpiTrend"><span class="delta down"><i class="fa-solid fa-arrow-trend-down"></i> -1.1%</span><span>needs fix</span></div></div>
+        <div class="kpi"><div class="kpiTop"><div class="kpiName">SKIPPED</div><div class="menu"><i class="fa-solid fa-ellipsis"></i></div></div><div class="kpiValue"><span id="kpiSkipped">6</span></div><div class="kpiTrend"><span class="delta up"><i class="fa-solid fa-arrow-trend-up"></i> +0.6%</span><span>env issues</span></div></div>
+        <div class="kpi"><div class="kpiTop"><div class="kpiName">TOTAL STEPS</div><div class="menu"><i class="fa-solid fa-ellipsis"></i></div></div><div class="kpiValue"><span id="kpiTotalSteps">1,540</span></div><div class="kpiTrend"><span class="delta up"><i class="fa-solid fa-arrow-trend-up"></i> +4.6%</span><span>coverage</span></div></div>
+		<div class="kpi" id="kpiAvgDurationCard">
+          <div class="kpiTop">
+            <div class="kpiName">AVG DURATION</div>
+            <div class="menu"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+
+          <div class="kpiValue">
+            <span id="kpiAvgDuration">--</span>
+          </div>
+
+		  <div class="kpiTrend">
+		    <span><i class="fa-solid fa-stopwatch"></i> Suite Duration</span>
+		    <span id="kpiTotalDuration" style="font-weight:900;">--:--:--</span>
+		  </div>
+
+        </div>
+
+      </section>
+
+      <!-- This section replaces ONLY: Execution Trend + Failures by Module (with donut cards) -->
+      <section class="midRow">
+        <div class="card">
+          <div class="cardHead">
+            <div>
+              <div class="title"><i class="fa-solid fa-chart-pie"></i> Test Health Snapshot</div>
+              <div class="sub">Instant Visibility into Test Stability - Test Health & Step Health</div>
+            </div>
+            <div class="menu"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+          <div class="cardBody">
+            <div class="donutGrid">
+              <div class="donutCard">
+                <div class="donutHead">Total Tests</div>
+                <div class="donutWrap">
+                  <canvas id="dTotalTests"></canvas>
+                  <div class="donutCenter" id="dCenterTotalTests">4</div>
+                </div>
+              </div>
+              <div class="donutCard">
+				<div class="donutHead">Tests Passed <span class="small" id="dTestsPassedCount">[0]</span></div>
+                <div class="donutWrap">
+                  <canvas id="dTestsPassed"></canvas>
+                  <div class="donutCenter" id="dCenterTestsPassed">50%</div>
+                </div>
+              </div>
+              <div class="donutCard">
+				<div class="donutHead">
+				  Tests Failed + Other <span class="small" id="dTestsFailedCount">[0]</span>
+				</div>
+                <div class="donutWrap">
+                  <canvas id="dTestsFailed"></canvas>
+                  <div class="donutCenter" id="dCenterTestsFailed">50%</div>
+                </div>
+              </div>
+              <div class="donutCard">
+                <div class="donutHead">Total Steps</div>
+                <div class="donutWrap">
+                  <canvas id="dTotalSteps"></canvas>
+                  <div class="donutCenter" id="dCenterTotalSteps">0</div>
+                </div>
+              </div>
+              <div class="donutCard">
+				<div class="donutHead">
+				  Steps Passed <span class="small" id="dStepsPassedCount">[0]</span>
+				</div>
+                <div class="donutWrap">
+                  <canvas id="dStepsPassed"></canvas>
+                  <div class="donutCenter" id="dCenterStepsPassed">0%</div>
+                </div>
+              </div>
+              <div class="donutCard">
+				<div class="donutHead">
+				  Steps Failed + Other <span class="small" id="dStepsFailedCount">[0]</span>
+				</div>
+                <div class="donutWrap">
+                  <canvas id="dStepsFailed"></canvas>
+                  <div class="donutCenter" id="dCenterStepsFailed">0%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KEEP Automation Execution Summary card here (not removed) -->
+        <div class="card">
+          <div class="cardHead">
+            <div>
+              <div class="title"><i class="fa-solid fa-chart-pie"></i> Automation Execution Summary</div>
+              <div class="sub">Visual Snapshot of Test Results - Pass, Fail, and Beyond</div>
+            </div>
+            <div class="menu"><i class="fa-solid fa-ellipsis"></i></div>
+          </div>
+          <div class="cardBody">
+            <canvas id="donutStatus"></canvas>
+			<!--status legend -->
+			<div class="statusLegendPremium">
+			  <div class="legendItem"><span class="dot passed"></span> Passed</div>
+			  <div class="legendItem"><span class="dot failed"></span> Failed</div>
+			  <div class="legendItem"><span class="dot skipped"></span> Skipped</div>
+			  <div class="legendItem"><span class="dot warning"></span> Warning</div>
+			</div>
+
+			<!--suite -->
+			<div class="suiteMetaPanel">
+			  <div class="suiteMetaItem">
+			    <span class="suiteMetaLabel">Project</span>
+			    <span class="suiteMetaValue" id="metaProjectName">-</span>
+			  </div>
+			  <div class="suiteMetaItem">
+			    <span class="suiteMetaLabel">Suite</span>
+			    <span class="suiteMetaValue" id="metaSuiteName">-</span>
+			  </div>
+			  <div class="suiteMetaItem">
+			    <span class="suiteMetaLabel">Build</span>
+			    <span class="suiteMetaValue" id="metaBuild">-</span>
+			  </div>
+			  <div class="suiteMetaItem">
+			    <span class="suiteMetaLabel">Executed By</span>
+			    <span class="suiteMetaValue" id="metaExecutedBy">-</span>
+			  </div>
+			</div>
+			<!-- suite end-->
+          </div>
+        </div>
+		<!-- 🔥 NEW CARD: Run Comparison Chart -->
+	      <div class="card">
+	        <div class="cardHead">
+	          <div>
+	            <div class="title"><i class="fa-solid fa-chart-column"></i> Run Comparison</div>
+	            <div class="sub">Current vs Previous Execution</div>
+	          </div>
+	        </div>
+	        <div class="cardBody">
+	          <canvas id="comparisonChart"></canvas>
+	        </div>
+	      </div>
+		  <!-- 🔥 NEW CARD: Failure Breakdown -->
+		  <div class="card">
+		    <div class="cardHead">
+		      <div>
+		        <div class="title"><i class="fa-solid fa-bug"></i> Failure Breakdown</div>
+		        <div class="sub">Root cause distribution of failed steps</div>
+		      </div>
+		    </div>
+		    <div class="cardBody">
+		      <canvas id="failureChart"></canvas>
+		    </div>
+		  </div>
+		  
+		  <div class="card">
+		    <div class="cardHead">
+		      <div>
+		        <div class="title"><i class="fa-solid fa-chart-line"></i> Failure Trend (Last 5 Runs)</div>
+		        <div class="sub">Failure count progression across executions</div>
+		      </div>
+		    </div>
+		    <div class="cardBody">
+		      <canvas id="failureTrendChart"></canvas>
+		    </div>
+		  </div>
+		  <div class="card">
+		    <div class="cardHead">
+		      <div>
+		        <div class="title"><i class="fa-solid fa-shuffle"></i> Flaky Tests</div>
+		        <div class="sub">Tests with inconsistent results across runs</div>
+		      </div>
+		    </div>
+		    <div class="cardBody">
+		      <div id="flakyList" style="display:flex;flex-direction:column;gap:10px;font-size:13px;"></div>
+		    </div>
+		  </div>
+
+      </section>
+
+      <!-- KEEP Detail Test Result section at its place (below) -->
+      <section class="card" id="detailTestResult">
+        <div class="cardHead">
+          <div>
+            <div class="title"><i class="fa-solid fa-list-check"></i> Detail Test Result</div>
+            <div class="sub">Test cases and steps</div>
+          </div>
+          <div class="menu" style="display:flex;align-items:center;gap:10px; width:auto; height:auto; border:none; background:transparent;">
+  <div class="dt-search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" id="dtSearchInput" placeholder="Search by Test ID / Name..." autocomplete="off"/>
+    <button class="dt-clear" id="dtSearchClear" title="Clear"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <div class="dt-filters" id="dtStatusFilters">
+    <button class="dt-chip active" data-status="ALL">All</button>
+    <button class="dt-chip pass" data-status="PASS">Pass</button>
+    <button class="dt-chip fail" data-status="FAIL">Fail</button>
+    <button class="dt-chip skip" data-status="SKIP">Skip</button>
+</div>
+
+  <div class="dt-sort">
+    <i class="fa-solid fa-arrow-up-wide-short"></i>
+    <select id="dtSortSelect" aria-label="Sort tests">
+      <option value="EXECUTION">Sort: Execution Order</option>
+      <option value="FAIL_FIRST">Sort: Failures First</option>
+      <option value="DURATION_DESC">Sort: Duration High → Low</option>
+      <option value="DURATION_ASC">Sort: Duration Low → High</option>
+      <option value="NAME_ASC">Sort: Name A → Z</option>
+    </select>
+  </div>
+
+  <div class="dt-actions">
+    <button class="dt-btn" id="dtExpandAll"><i class="fa-solid fa-angles-down"></i> Expand</button>
+    <button class="dt-btn" id="dtCollapseAll"><i class="fa-solid fa-angles-up"></i> Collapse</button>
+    <button class="dt-btn dt-btn-accent" id="dtExpandFailed"><i class="fa-solid fa-bug"></i> Failed</button>
+  </div>
+</div>
+        </div>
+
+        <div class="cardBody">
+          <div class="testList" id="testList"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script>
+    function scrollToDetailTestResult() {
+      const target = document.getElementById("detailTestResult");
+      if (!target) return;
+
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      // optional nice highlight
+      target.classList.add("pulse-highlight");
+      setTimeout(() => target.classList.remove("pulse-highlight"), 1300);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const totalCard = document.getElementById("kpiTotalTestsCard");
+      if (!totalCard) return;
+
+      totalCard.addEventListener("click", scrollToDetailTestResult);
+
+      totalCard.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          scrollToDetailTestResult();
+        }
+      });
+    });
+  </script>
+  <script>
+    function formatExecutionDateTime(date = new Date()) {
+      return date.toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.getElementById("executionDateTime");
+      if (!el) return;
+
+      // If later you inject real execution start time from Java,
+      // just set it to window.reportMeta.executionStart
+      if (window.reportMeta?.executionStart) {
+        el.textContent = window.reportMeta.executionStart;
+      } else {
+        el.textContent = formatExecutionDateTime(new Date());
+      }
+    });
+  </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const testList = document.getElementById("testList");
+    const kpiHeader = document.getElementById("kpiHeader");
+
+    if (!testList || !kpiHeader) return;
+
+    testList.addEventListener("scroll", () => {
+      if (testList.scrollTop > 10) {
+        kpiHeader.classList.add("stuck");
+      } else {
+        kpiHeader.classList.remove("stuck");
+      }
+    });
+  });
+  </script>
+  <div id="imgModal" class="imgModal">
+    <span class="imgClose">&times;</span>
+    <img class="imgContent" id="imgModalSrc">
+  </div>
+
+<!--__REPORT_DATA__-->
+<!--__REPORT_UI_JS__-->
+</body>
+</html>

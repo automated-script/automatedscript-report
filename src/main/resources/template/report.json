@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "project": "Demo E-Commerce",
+    "suiteName": "Regression Suite",
+    "build": "219",
+    "executedBy": "Local"
+  },
+  "summary": {
+    "totalTests": 4,
+    "passed": 2,
+    "failed": 2,
+    "skipped": 0,
+    "warning": 0,
+    "fatal": 0,
+    "totalSteps": 10,
+    "stepsPassed": 7,
+    "stepsFailed": 3,
+    "stepsFatal": 0,
+    "avgDurationHuman": "38s"
+  },
+  "tests": [
+    {
+      "id": "TC-LOGIN-001",
+      "name": "Login with valid credentials",
+      "status": "PASS",
+      "category": "Smoke",
+      "owner": "QA",
+      "durationMs": 9000,
+      "defectId": "",
+      "steps": [
+        {
+          "time": "10:21:15",
+          "status": "PASS",
+          "action": "Open login page",
+          "details": "Open /login"
+        },
+        {
+          "time": "10:21:18",
+          "status": "PASS",
+          "action": "Enter credentials",
+          "details": "Type user + password"
+        },
+        {
+          "time": "10:21:21",
+          "status": "PASS",
+          "action": "Verify dashboard visible",
+          "details": "Dashboard rendered"
+        }
+      ]
+    },
+    {
+      "id": "TC-CART-014",
+      "name": "Add item from Home and verify cart",
+      "status": "FAIL",
+      "category": "Regression",
+      "owner": "Automation",
+      "durationMs": 26000,
+      "defectId": "BUG-3421",
+      "steps": [
+        {
+          "time": "10:22:08",
+          "status": "PASS",
+          "action": "User logged in",
+          "details": "Session token active"
+        },
+        {
+          "time": "10:22:12",
+          "status": "PASS",
+          "action": "Add product from Home",
+          "details": "Click Add to Cart",
+          "evidence": {
+            "screenshots": [
+              {
+                "title": "After add",
+                "url": "./evidence/cart_add.png"
+              }
+            ]
+          }
+        },
+        {
+          "time": "10:22:19",
+          "status": "FAIL",
+          "action": "Verify product in cart",
+          "details": "Expected iPhone 15, got undefined",
+          "evidence": {
+            "screenshots": [
+              {
+                "title": "Failure",
+                "url": "./evidence/cart_fail.png"
+              }
+            ],
+            "video": "./evidence/run.mp4"
+          }
+        }
+      ]
+    }
+  ]
+}

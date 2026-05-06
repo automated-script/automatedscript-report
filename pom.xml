@@ -1,0 +1,135 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.automatedscript</groupId>
+    <artifactId>automatedscript-report</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>AutomatedScript Report</name>
+    <description>Graphical HTML reporting library for Playwright and Selenium automation</description>
+    <url>https://github.com/YOUR_USERNAME/automatedscript-report</url>
+
+    <!-- LICENSE -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <!-- DEVELOPER -->
+    <developers>
+        <developer>
+            <id>automatedscript</id>
+            <name>Your Name</name>
+            <email>your@email.com</email>
+        </developer>
+    </developers>
+
+    <!-- SOURCE CONTROL -->
+    <scm>
+        <connection>scm:git:git://github.com/YOUR_USERNAME/automatedscript-report.git</connection>
+        <developerConnection>scm:git:ssh://github.com:YOUR_USERNAME/automatedscript-report.git</developerConnection>
+        <url>https://github.com/YOUR_USERNAME/automatedscript-report</url>
+    </scm>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+
+      <!-- ✅ JACKSON (for JSON handling) -->
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+          <version>2.17.0</version>
+      </dependency>
+
+      <!-- ✅ TESTNG (for listener support) -->
+      <dependency>
+          <groupId>org.testng</groupId>
+          <artifactId>testng</artifactId>
+          <version>7.10.2</version>
+          <scope>provided</scope>
+      </dependency>
+
+      <!-- ✅ SELENIUM (for WebDriver + screenshots) -->
+      <dependency>
+          <groupId>org.seleniumhq.selenium</groupId>
+          <artifactId>selenium-java</artifactId>
+          <version>4.21.0</version>
+          <scope>provided</scope>
+      </dependency>
+
+  </dependencies>
+
+    <build>
+        <plugins>
+
+            <!-- SOURCE JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- JAVADOC JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- GPG SIGNING -->
+            <!-- <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>-->
+
+            <!-- SONATYPE DEPLOY -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.13</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
